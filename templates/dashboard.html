@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h2>Dashboard</h2>
+  {% if error %}<p class="error">{{ error }}</p>{% endif %}
+  <div class="card">
+    <h3>Total estimated loss due to middlemen / inefficiency</h3>
+    <p class="big">₹{{ total_loss }}</p>
+  </div>
+
+  <div class="card">
+    <h3>Enter crop details (manual)</h3>
+    <form id="entryForm" method="post" action="{{ url_for('analyze') }}">
+      <table id="entryTable">
+        <thead>
+          <tr><th>Crop</th><th>Qty (kg)</th><th>Farm-gate ₹/kg</th><th>Market ₹/kg</th><th>Transport ₹/kg</th><th>Storage %</th><th></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><input name="crop[]" placeholder="Tomato"></td>
+            <td><input name="quantity_kg[]" value="0"></td>
+            <td><input name="farm_gate_price_per_kg[]" value="0"></td>
+            <td><input name="market_price_per_kg[]" value="0"></td>
+            <td><input name="transport_cost_per_kg[]" value="0"></td>
+            <td><input name="storage_loss_percent[]" value="0"></td>
+            <td><button class="removeRow" type="button">−</button></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="form-actions">
+        <button id="addRow" type="button">Add row</button>
+        <button type="submit">Analyze</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="card">
+    <h3>Results</h3>
+    <canvas id="lossChart" height="120"></canvas>
+
+    <table>
+      <thead>
+        <tr><th>Crop</th><th>Quantity (kg)</th><th>Farm-gate (₹)</th><th>Market net (₹)</th><th>Loss (₹)</th></tr>
+      </thead>
+      <tbody>
+        {% for r in rows %}
+        <tr>
+          <td>{{ r.crop }}</td>
+          <td>{{ r.quantity_kg }}</td>
+          <td>{{ r.farm_gate_total }}</td>
+          <td>{{ r.market_net_total }}</td>
+          <td>{{ r.loss }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    // Add/remove row UI
+    document.getElementById('addRow').addEventListener('click', function(){
+      const tbody = document.querySelector('#entryTable tbody');
+      const tr = document.createElement('tr');
+      tr.innerHTML = `\
+        <td><input name="crop[]" placeholder="Crop"></td>\
+        <td><input name="quantity_kg[]" value="0"></td>\
+        <td><input name="farm_gate_price_per_kg[]" value="0"></td>\
+        <td><input name="market_price_per_kg[]" value="0"></td>\
+        <td><input name="transport_cost_per_kg[]" value="0"></td>\
+        <td><input name="storage_loss_percent[]" value="0"></td>\
+        <td><button class="removeRow" type="button">−</button></td>`;
+      tbody.appendChild(tr);
+    });
+    document.addEventListener('click', function(e){
+      if(e.target && e.target.classList.contains('removeRow')){
+        const row = e.target.closest('tr');
+        row.parentNode.removeChild(row);
+      }
+    });
+
+    // Chart rendering
+    const rows = {{ rows|tojson }};
+    const labels = rows.map(r => r.crop);
+    const losses = rows.map(r => r.loss);
+    const ctx = document.getElementById('lossChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Loss (₹)',
+          data: losses,
+          backgroundColor: 'rgba(255,99,132,0.6)'
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: { y: { beginAtZero: true } }
+      }
+    });
+  </script>
+
+{% endblock %}
