@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Farmer Middleman Loss Analyzer
 
 Lightweight Flask app to estimate how much farmers lose due to middlemen by comparing farm-gate price vs market price and accounting for transport & storage loss.
@@ -36,3 +37,6 @@ What this repo includes:
 Notes and next steps:
 - You can extend the scraper and connect to real-time market data.
 - Add stronger auth (Flask-Login) and input validation for production.
+=======
+# Farmer-middleman-loss-analyzer
+>>>>>>> 65e3f14b38b4cff1220b0420152ff707e12de16d
